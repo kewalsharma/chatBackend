@@ -7,12 +7,12 @@ import Message from "./models/Message.js";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import "dotenv/config";
+// import jwt from "jsonwebtoken";
 
 const PORT = process.env.PORT;
 
 mongoose
   .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
     useUnifiedTopology: true,
   })
   .then(() => console.log("MongoDB connected"))
@@ -47,6 +47,17 @@ app.post("/login", async (req, res) => {
     if (!isMatch)
       return res.status(401).json({ message: "Invalid credentials" });
 
+    // const payload = {
+    //   username: user.username,
+    //   userId: user._id,
+    // };
+
+    // const token = jwt.sign(payload, process.env.JWT_SECRET, {
+    //   expiresIn: "3d",
+    // });
+
+    // console.log(token);
+
     res
       .status(200)
       .json({ message: "Login successful", username: user.username });
@@ -60,6 +71,7 @@ const io = new Server(server, {
   cors: {
     origin: process.env.CLIENT_URL,
     methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 
@@ -131,6 +143,15 @@ app.get("/status/:username", async (req, res) => {
     res.json({ status: user.isOnline ? "online" : "offline" });
   } else {
     res.status(404).json({ status: "offline" });
+  }
+});
+
+app.get("/user/:username", async (req, res) => {
+  const user = await User.findOne({ username: req.params.username });
+  if (user) {
+    res.json({ user: "exists" }).status(200);
+  } else {
+    res.status(409).json({ user: "user not found" });
   }
 });
 
